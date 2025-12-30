@@ -1,6 +1,5 @@
 import math
 
-
 def distance(p1, p2):
     """Return the Euclidean distance between two points."""
     _validate_point(p1)

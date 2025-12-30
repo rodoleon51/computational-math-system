@@ -8,20 +8,53 @@ from sympy import sympify
 # ---------------------------------------------------------
 from sympy import sympify, simplify
 
-def _to_sympy_number(x):
+
+def _to_sympy_number(x, allow_symbol: bool = False, allowed_symbols=None):
     """
-    Convert any numeric input (int, float, Rational, Expr) into a SymPy expression.
-    Ensures simplify() always receives a SymPy Basic object.
+    Convert input to a SymPy numeric expression.
+
+    - Accepts Python numeric types (int, float) and SymPy numeric types (Rational, Number).
+    - For strings or SymPy expressions containing symbols, allow only when allow_symbol=True
+      and any present symbols are within allowed_symbols (if provided).
+    - Reject non-numeric symbolic values when allow_symbol=False.
     """
-    # Already a SymPy object
+    # Normalize allowed symbol names (compare by string repr to avoid .name typing issues)
+    allowed_names = None
+    if allowed_symbols is not None:
+        allowed_names = set(str(s) for s in allowed_symbols)
+
+    # If it's already a SymPy object
     if isinstance(x, (Expr, Number)):
+        # SymPy numeric types (Number) are always allowed
+        if isinstance(x, Number):
+            return x
+        # For general expressions, check if they contain symbols
+        if hasattr(x, "free_symbols") and x.free_symbols:
+            if allow_symbol:
+                if allowed_names is None:
+                    return x
+                # Ensure all free symbols are allowed (compare via str(sym))
+                if all(str(sym) in allowed_names for sym in x.free_symbols):
+                    return x
+            raise TypeError("Value must be numeric, not symbolic.")
         return x
 
-    # Convert Python ints/floats to SymPy
+    # Try converting via sympify (handles ints, floats, numeric strings, etc.)
     try:
-        return sympify(x)
+        val = sympify(x)
     except Exception:
         raise TypeError("Value must be numeric or a SymPy expression.")
+
+    # If conversion yields a symbolic expression, allow only when requested
+    if isinstance(val, Expr) and not isinstance(val, Number):
+        if hasattr(val, "free_symbols") and val.free_symbols:
+            if allow_symbol:
+                if allowed_names is None:
+                    return val
+                if all(str(sym) in allowed_names for sym in val.free_symbols):
+                    return val
+            raise TypeError("Value must be numeric, not symbolic.")
+    return val
 
 
 # ---------------------------------------------------------
@@ -103,8 +136,8 @@ def slope(p1, p2):
 
 def point_slope(p, m, x_value):
     x0, y0 = _validate_point(p)
-    m = _to_sympy_number(m)
-    x_value = _to_sympy_number(x_value)
+    m = _to_sympy_number(m, allow_symbol=False)
+    x_value = _to_sympy_number(x_value, allow_symbol=True)
 
     expr = sympify(y0 + m * (x_value - x0))
     return simplify(expr)
@@ -116,9 +149,10 @@ def point_slope(p, m, x_value):
 
 
 def slope_intercept(m, b, x_value):
-    m = _to_sympy_number(m)
-    b = _to_sympy_number(b)
-    x_value = _to_sympy_number(x_value)
+    # Allow symbolic 'm' as the slope, but require numeric b and x_value
+    m = _to_sympy_number(m, allow_symbol=True, allowed_symbols={"m"})
+    b = _to_sympy_number(b, allow_symbol=False)
+    x_value = _to_sympy_number(x_value, allow_symbol=False)
 
     expr = sympify(m * x_value + b)
     return simplify(expr)
