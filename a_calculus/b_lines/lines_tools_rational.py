@@ -7,6 +7,18 @@ def _to_sym(x):
     return sympify(x)
 
 
+def line_to_abc(eq, x, y):
+    """
+    Convert a SymPy equation (like x-3, y+4, 2*x-3*y+7) into (a, b, c)
+    for ax + by + c = 0.
+    """
+    eq = sympify(eq)
+    a = eq.coeff(x)
+    b = eq.coeff(y)
+    c = eq.subs({x: 0, y: 0})
+    return a, b, c
+
+
 def slope(p1, p2):
     x1, y1 = _to_sym(p1[0]), _to_sym(p1[1])
     x2, y2 = _to_sym(p2[0]), _to_sym(p2[1])
@@ -34,20 +46,32 @@ def distance_point_to_line(p, m, b):
     return simplify(expr)
 
 
-def are_parallel(m1, m2):
-    return simplify(_to_sym(m1) - _to_sym(m2)) == 0
+def are_parallel(eq1, eq2, x, y):
+    a1, b1, _ = line_to_abc(eq1, x, y)
+    a2, b2, _ = line_to_abc(eq2, x, y)
+    return simplify(a1 * b2 - a2 * b1) == 0
 
 
-def are_perpendicular(m1, m2):
-    return simplify(_to_sym(m1) * _to_sym(m2) + 1) == 0
+def are_perpendicular(eq1, eq2, x, y):
+    a1, b1, _ = line_to_abc(eq1, x, y)
+    a2, b2, _ = line_to_abc(eq2, x, y)
+    return simplify(a1 * a2 + b1 * b2) == 0
 
-def intersection_of_lines(m1, b1, m2, b2):
+
+def intersection_of_lines(m1, b1, m2, b2, x, y):
     m1, b1 = _to_sym(m1), _to_sym(b1)
     m2, b2 = _to_sym(m2), _to_sym(b2)
 
-    if are_parallel(m1, m2):
+    # Convert slope-intercept form to general form: m*x - y + b = 0
+    eq1 = m1 * x - y + b1
+    eq2 = m2 * x - y + b2
+
+    # Use the new general-form parallel test
+    if are_parallel(eq1, eq2, x, y):
         raise ValueError("Lines are parallel; no intersection point.")
 
-    x = simplify((b2 - b1) / (m1 - m2))
-    y = simplify(m1 * x + b1)
-    return (x, y)
+    # Solve normally (slope-intercept intersection)
+    x_int = simplify((b2 - b1) / (m1 - m2))
+    y_int = simplify(m1 * x_int + b1)
+
+    return (x_int, y_int)
