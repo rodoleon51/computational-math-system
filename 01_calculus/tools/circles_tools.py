@@ -11,6 +11,78 @@ def distance_numeric(p1, p2):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
+def detect_and_normalize_circle_numeric(A, B, C, D, E, F, tol=1e-9):
+    """
+    Numeric version of circle detection and normalization.
+
+    Returns:
+        (True, (D_norm, E_norm, F_norm)) if circle
+        (False, None) if not a circle
+    """
+
+    # Must have quadratic terms
+    if abs(A) < tol and abs(C) < tol:
+        return (False, None)
+
+    # No xy term allowed
+    if abs(B) > tol:
+        return (False, None)
+
+    # Must have equal coefficients for x^2 and y^2
+    if abs(A - C) > tol:
+        return (False, None)
+
+    # Normalize if needed
+    if abs(A - 1.0) > tol:
+        Dn = D / A
+        En = E / A
+        Fn = F / A
+    else:
+        Dn, En, Fn = D, E, F
+
+    return (True, (Dn, En, Fn))
+
+
+import math
+
+
+def circle_from_center_point_numeric(center, point):
+    """
+    Numeric version: center (h, k) and point (x1, y1) → (h, k, r)
+    """
+    h, k = center
+    x1, y1 = point
+    r = math.sqrt((x1 - h) ** 2 + (y1 - k) ** 2)
+    return (h, k, r)
+
+
+def standard_equation_from_center_radius_numeric(center, radius):
+    """
+    Return the standard equation (x - h)^2 + (y - k)^2 = r^2
+    as a formatted string using numeric values.
+    """
+    h, k = center
+    r = radius
+
+    eq_str = f"(x - {h})^2 + (y - {k})^2 = {r**2}"
+    return eq_str
+
+
+def circle_from_center_point_radius_numeric(center, point, radius, tol=1e-9):
+    """
+    Numeric version with tolerance checking.
+    """
+    h, k = center
+    x1, y1 = point
+    r = float(radius)
+
+    dist = math.sqrt((x1 - h) ** 2 + (y1 - k) ** 2)
+    if abs(dist - r) > tol:
+        raise ValueError("Point is not at distance r from center.")
+
+    return (h, k, r)
+
+
 def point_circle_position(center, radius, point):
     """
     Determine if a point is inside, on, or outside a circle.
