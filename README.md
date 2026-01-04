@@ -35,15 +35,14 @@ computational-math-system/
 ├── 02_matrices/ 
 ├── 03_statistics/ 
 ├── 04_differential_equations/ 
-├── 05_docs/ 
-├── 06_notebooks/ 
-└── tests/
+├── 10_docs/ 
+├── 11_pytests/ 
 
 ## Documentation
-All design documents, templates, and architecture notes are stored in `05_docs/`.
+All design documents, templates, and architecture notes are stored in `10_docs/`.
 
 ## Notebooks
-Exploratory and design notebooks are stored in `06_notebooks/`.
+Exploratory and design notebooks are stored in in each subject's notebooks/`.
 
 ## Status
 This project is in its initial design phase.  
